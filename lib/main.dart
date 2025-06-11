@@ -5,79 +5,104 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-  final title = 'Flutterサンプル';
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      home: MyHomePage(title: this.title),
+      title: 'ToDo App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({required this.title}) : super();
-  final String title;
+class Todo {
+  String title;
+  bool isDone;
 
+  Todo({required this.title, this.isDone = false});
+}
+
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key? key}) : super(key: key);
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static var _message = 'ok.';
+  final List<Todo> _todos = [];
+  final TextEditingController _controller = TextEditingController();
+
+  void _addTodo() {
+    final text = _controller.text;
+    if (text.isNotEmpty) {
+      setState(() {
+        _todos.add(Todo(title: text));
+        _controller.clear();
+      });
+    }
+  }
+
+  void _toggleTodoStatus(int index) {
+    setState(() {
+      _todos[index].isDone = !_todos[index].isDone;
+    });
+  }
+
+  void _deleteTodo(int index) {
+    setState(() {
+      _todos.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('App Name')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text(
-                _message,
-                style: TextStyle(
-                  fontSize: 32.0,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: "Roboto",
-                ),
-              ),
-            ),
-            Padding(padding: EdgeInsets.all(10.0)),
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: ElevatedButton(
-                onPressed: buttonPressed,
-                child: Text(
-                  "tap me!",
-                  style: TextStyle(
-                    fontSize: 32.0,
-                    color: const Color(0xff000000),
-                    fontWeight: FontWeight.w400,
-                    fontFamily: "Roboto",
+      appBar: AppBar(title: const Text('ToDo App')),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(labelText: '新しいタスクを入力'),
                   ),
                 ),
-              ),
+                IconButton(icon: const Icon(Icons.add), onPressed: _addTodo),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void buttonPressed() {
-    showDialog(
-      context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            title: Text("Hello!"),
-            content: Text("This is sample."),
           ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _todos.length,
+              itemBuilder: (context, index) {
+                final todo = _todos[index];
+                return ListTile(
+                  leading: Checkbox(
+                    value: todo.isDone,
+                    onChanged: (value) {
+                      _toggleTodoStatus(index);
+                    },
+                  ),
+                  title: Text(
+                    todo.title,
+                    style: TextStyle(
+                      decoration:
+                          todo.isDone ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => _deleteTodo(index),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
