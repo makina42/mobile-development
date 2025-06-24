@@ -1,108 +1,91 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:ui' as ui;
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ToDo App',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      title: 'Generated App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        primaryColor: const Color(0xff2196f3),
+        canvasColor: const Color(0xfffafafa),
+      ),
       home: MyHomePage(),
     );
   }
 }
 
-class Todo {
-  String title;
-  bool isDone;
-
-  Todo({required this.title, this.isDone = false});
-}
-
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({Key? key}) : super(key: key);
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Todo> _todos = [];
-  final TextEditingController _controller = TextEditingController();
-
-  void _addTodo() {
-    final text = _controller.text;
-    if (text.isNotEmpty) {
-      setState(() {
-        _todos.add(Todo(title: text));
-        _controller.clear();
-      });
-    }
-  }
-
-  void _toggleTodoStatus(int index) {
-    setState(() {
-      _todos[index].isDone = !_todos[index].isDone;
-    });
-  }
-
-  void _deleteTodo(int index) {
-    setState(() {
-      _todos.removeAt(index);
-    });
-  }
+  final _controller = TextEditingController();
+  final _fname = 'assets/documents/data.txt';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ToDo App')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(labelText: '新しいタスクを入力'),
-                  ),
+      appBar: AppBar(title: Text('Home')),
+      body: Padding(
+        padding: EdgeInsets.all(20.0),
+        child: Column(
+          children: <Widget>[
+            Text(
+              'RESOURCE ACCESS.',
+              style: TextStyle(fontSize: 32, fontWeight: ui.FontWeight.w500),
+            ),
+            Padding(padding: EdgeInsets.all(10.0)),
+            TextField(
+              controller: _controller,
+              style: TextStyle(fontSize: 24),
+              minLines: 1,
+              maxLines: 5,
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.open_in_new),
+        onPressed: () async {
+          final value = await loadIt();
+          setState(() {
+            _controller.text = value;
+          });
+          showDialog(
+            context: context,
+            builder:
+                (BuildContext context) => AlertDialog(
+                  title: Text("loaded!"),
+                  content: Text("load message from Asset."),
                 ),
-                IconButton(icon: const Icon(Icons.add), onPressed: _addTodo),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _todos.length,
-              itemBuilder: (context, index) {
-                final todo = _todos[index];
-                return ListTile(
-                  leading: Checkbox(
-                    value: todo.isDone,
-                    onChanged: (value) {
-                      _toggleTodoStatus(index);
-                    },
-                  ),
-                  title: Text(
-                    todo.title,
-                    style: TextStyle(
-                      decoration:
-                          todo.isDone ? TextDecoration.lineThrough : null,
-                    ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _deleteTodo(index),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
+  }
+
+  Future<String> getDataAsset(String path) async {
+    return await rootBundle.loadString(path);
+  }
+
+  Future<String> loadIt() async {
+    try {
+      final res = await getDataAsset(_fname);
+      return res;
+    } catch (e) {
+      return '*** no data ***';
+    }
   }
 }
